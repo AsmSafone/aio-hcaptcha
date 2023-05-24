@@ -10,7 +10,9 @@ def _bezier(xys, ts):
         tpowers = (t ** i for i in range(4))
         upowers = reversed([(1 - t) ** i for i in range(4)])
         coefs = [c * a * b for c, a, b in zip([1, 3, 3, 1], tpowers, upowers)]
-        result.append(list(sum([coef * p for coef, p in zip(coefs, ps)]) for ps in zip(*xys)))
+        result.append(
+            [sum(coef * p for coef, p in zip(coefs, ps)) for ps in zip(*xys)]
+        )
     return result
 
 def mouse_curve(start_pos, end_pos, ln):
@@ -27,6 +29,4 @@ async def getUrl(url, decode=True):
     async with ClientSession() as sess:
         async with sess.get(url) as resp:
             data = await resp.content.read()
-            if not decode:
-                return data
-            return data.decode("utf8")
+            return data if not decode else data.decode("utf8")
