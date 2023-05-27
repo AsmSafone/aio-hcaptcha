@@ -211,9 +211,8 @@ class AioHcaptcha:
                 p.append(e)
             l = p[:r]
             def index2(b,y):
-                if y in b:
-                    return b.index(y)
-                return -1
+                return b.index(y) if y in b else -1
+
             return 0 == l[0] and index2(l, 1) >= r - 1 or -1 == index2(l, 1)
 
         def get():
@@ -386,8 +385,9 @@ class AioHcaptcha:
         # Get latest hcaptcha version code
         api_js = await sess.get("https://js.hcaptcha.com/1/api.js")
         api_js = await api_js.text()
-        versions = re.findall(r'captcha\\/v1\\/([a-z0-9]{4,8})\\/static', api_js)
-        if versions:
+        if versions := re.findall(
+            r'captcha\\/v1\\/([a-z0-9]{4,8})\\/static', api_js
+        ):
             self._version = versions[0]
 
         log.debug(f"HCaptcha version: {self._version}")
@@ -424,7 +424,7 @@ class AioHcaptcha:
         captcha = await captcha.json()
         log.debug(f"GetCaptcha: {captcha}")
         if captcha.get("pass"):
-            log.debug(f"Captcha solved!")
+            log.debug("Captcha solved!")
             return captcha["generated_pass_UUID"]
 
         key = captcha["key"]
@@ -433,7 +433,7 @@ class AioHcaptcha:
         log.debug(f"Question: {captcha['requester_question']['en']}")
         self._start = int(time() * 1000 - 2000)
         if (answers := await self._question_callback(captcha["requester_question"]["en"], tasklist)) is None: # Get answers
-            log.debug(f"Can't solve this captcha. Retrying...")
+            log.debug("Can't solve this captcha. Retrying...")
             self._retries += 1
             return await self.solve(retry_count, custom_params)
         log.debug(f"Got answers: {answers}, sending to /checkcaptcha/{self.sitekey}/{key}")
@@ -458,11 +458,11 @@ class AioHcaptcha:
 
         # Return captcha key if it in response
         if r.get("pass"):
-            log.debug(f"Captcha solved!")
+            log.debug("Captcha solved!")
             return r["generated_pass_UUID"]
 
         # Retry if failed to solve captcha
         if retry_count > 0 and self._retries < retry_count:
-            log.debug(f"Retrying...")
+            log.debug("Retrying...")
             self._retries += 1
             return await self.solve(retry_count, custom_params)
